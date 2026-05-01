@@ -1,0 +1,19 @@
+{
+  "name": "com.cnoom.unitygametool",
+  "displayName": "UnityGameTool",
+  "version": "1.0.0",
+  "unity": "2021.3",
+  "description": "Unity 游戏功能工具集，提供打字机效果等常用游戏功能实现。支持通过 UniTask 扩展程序集获得异步增强。",
+  "keywords": [
+    "game",
+    "tools",
+    "typewriter"
+  ],
+  "author": {
+    "name": "CNoom",
+    "url": "https://github.com/cnoom"
+  },
+  "dependencies": {
+    "com.unity.textmeshpro": "3.0.0"
+  }
+}

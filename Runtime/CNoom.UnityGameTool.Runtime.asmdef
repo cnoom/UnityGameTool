@@ -1,0 +1,16 @@
+{
+    "name": "CNoom.UnityGameTool.Runtime",
+    "rootNamespace": "CNoom.UnityGameTool",
+    "references": [
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

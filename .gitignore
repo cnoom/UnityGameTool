@@ -1,0 +1,23 @@
+# Unity 生成的文件夹
+obj/
+Logs/
+Temp/
+Library/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+[Bb]uild/
+[Bb]in/
+[Oo]ut/
