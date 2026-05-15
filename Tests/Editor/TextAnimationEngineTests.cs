@@ -123,7 +123,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_NonLooping_StopsAfterDuration()
         {
-            _config = new TextAnimationConfig(duration: 0.1f);
+            _config = new TextAnimationConfig(duration: 0.1f, fadeOutDuration: 0f);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(3);
 
