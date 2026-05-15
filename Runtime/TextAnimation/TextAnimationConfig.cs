@@ -48,6 +48,9 @@ namespace CNoom.UnityGameTool.TextAnimation
         [SerializeField]
         private float _fadeDuration = 0.3f;
 
+        [SerializeField]
+        private float _fadeOutDuration = 0.3f;
+
         /// <summary>动画类型</summary>
         public TextAnimationType Type => _type;
 
@@ -69,6 +72,9 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// <summary>Fade 模式下每个字符的渐显时长（秒）</summary>
         public float FadeDuration => _fadeDuration;
 
+        /// <summary>动画结束时的过渡时长（秒），0 表示无过渡立即停止</summary>
+        public float FadeOutDuration => _fadeOutDuration;
+
         /// <summary>是否为循环模式</summary>
         public bool IsLooping => _duration < 0f;
 
@@ -82,7 +88,8 @@ namespace CNoom.UnityGameTool.TextAnimation
             float amplitude = 10f,
             float frequency = 2f,
             float charDelay = 0.05f,
-            float fadeDuration = 0.3f)
+            float fadeDuration = 0.3f,
+            float fadeOutDuration = 0.3f)
         {
             _type = type;
             _duration = duration;
@@ -91,6 +98,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             _frequency = frequency;
             _charDelay = charDelay;
             _fadeDuration = fadeDuration;
+            _fadeOutDuration = fadeOutDuration;
         }
     }
 }

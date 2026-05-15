@@ -46,6 +46,10 @@ namespace CNoom.UnityGameTool.TextAnimation
         private float _elapsed;
         private bool _isPlaying;
 
+        // 过渡淡出状态
+        private bool _isFadingOut;
+        private float _fadeOutElapsed;
+
         // 每字符动画数据（预分配，避免 GC）
         private CharAnimationData[] _charData = Array.Empty<CharAnimationData>();
 
@@ -54,8 +58,11 @@ namespace CNoom.UnityGameTool.TextAnimation
         private float[] _shakeSeedY = Array.Empty<float>();
         private int _shakeFrameIndex;
 
-        /// <summary>是否正在播放</summary>
-        public bool IsPlaying => _isPlaying;
+        /// <summary>是否正在播放（含过渡阶段）</summary>
+        public bool IsPlaying => _isPlaying || _isFadingOut;
+
+        /// <summary>是否处于过渡淡出阶段</summary>
+        public bool IsFadingOut => _isFadingOut;
 
         /// <summary>已播放时间</summary>
         public float Elapsed => _elapsed;
@@ -95,6 +102,8 @@ namespace CNoom.UnityGameTool.TextAnimation
             _elapsed = 0f;
             _shakeFrameIndex = 0;
             _isPlaying = charCount > 0;
+            _isFadingOut = false;
+            _fadeOutElapsed = 0f;
 
             EnsureCapacity(charCount);
 
@@ -124,18 +133,61 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// <returns>是否仍在播放中</returns>
         public bool Tick(float deltaTime)
         {
-            if (!_isPlaying || _charCount == 0) return false;
+            if (_charCount == 0) return false;
+
+            // 过渡淡出阶段
+            if (_isFadingOut)
+            {
+                _fadeOutElapsed += deltaTime;
+                float fadeDur = _config.FadeOutDuration;
+
+                if (fadeDur <= 0f || _fadeOutElapsed >= fadeDur)
+                {
+                    // 过渡完成
+                    _isFadingOut = false;
+                    ResetCharData();
+                    return false;
+                }
+
+                // 先计算正常动画数据，再乘以淡出系数
+                ComputeAnimation();
+                ApplyFadeOut(_fadeOutElapsed / fadeDur);
+                return true;
+            }
+
+            if (!_isPlaying) return false;
 
             _elapsed += deltaTime * _config.Speed;
 
-            // 非循环模式下检查是否完成
+            // 非循环模式下检查是否需要进入过渡
             if (!_config.IsLooping && _elapsed >= _config.Duration)
             {
                 _isPlaying = false;
+
+                // 有过渡时长则进入 fadeout 阶段
+                if (_config.FadeOutDuration > 0f)
+                {
+                    _isFadingOut = true;
+                    _fadeOutElapsed = 0f;
+                    // 计算最后一帧的动画数据作为 fadeout 起点
+                    ComputeAnimation();
+                    return true;
+                }
+
                 ResetCharData();
                 return false;
             }
 
+            ComputeAnimation();
+
+            return _isPlaying;
+        }
+
+        /// <summary>
+        /// 根据当前类型计算动画数据。
+        /// </summary>
+        private void ComputeAnimation()
+        {
             switch (_config.Type)
             {
                 case TextAnimationType.Wave:
@@ -151,8 +203,22 @@ namespace CNoom.UnityGameTool.TextAnimation
                     ComputeFade();
                     break;
             }
+        }
 
-            return _isPlaying;
+        /// <summary>
+        /// 将过渡淡出系数应用到所有字符的动画数据上。
+        /// </summary>
+        /// <param name="progress">淡出进度 0~1（0=动画数据原值，1=全部归零）</param>
+        private void ApplyFadeOut(float progress)
+        {
+            float factor = 1f - progress;
+            for (int i = 0; i < _charCount; i++)
+            {
+                _charData[i].XOffset *= factor;
+                _charData[i].YOffset *= factor;
+                _charData[i].Scale = 1f + (_charData[i].Scale - 1f) * factor;
+                _charData[i].Alpha = 1f - (1f - _charData[i].Alpha) * factor;
+            }
         }
 
         /// <summary>
@@ -161,6 +227,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         public void Stop()
         {
             _isPlaying = false;
+            _isFadingOut = false;
         }
 
         /// <summary>
@@ -169,6 +236,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         public void SkipToEnd()
         {
             _isPlaying = false;
+            _isFadingOut = false;
             ResetCharData();
         }
 
@@ -180,6 +248,8 @@ namespace CNoom.UnityGameTool.TextAnimation
             _charCount = 0;
             _elapsed = 0f;
             _isPlaying = false;
+            _isFadingOut = false;
+            _fadeOutElapsed = 0f;
             _shakeFrameIndex = 0;
         }
 

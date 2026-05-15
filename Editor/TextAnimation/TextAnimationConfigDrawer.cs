@@ -19,6 +19,7 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
         private const string PropFrequency = "_frequency";
         private const string PropCharDelay = "_charDelay";
         private const string PropFadeDuration = "_fadeDuration";
+        private const string PropFadeOutDuration = "_fadeOutDuration";
 
         // 中文 Tooltip
         private const string TipType =
@@ -41,6 +42,8 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             "相邻字符之间的动画延迟（秒）。0 为同时运动，大于 0 产生波浪扩散效果";
         private const string TipFadeDuration =
             "每个字符从完全透明到完全显示的渐变时长（秒）";
+        private const string TipFadeOutDuration =
+            "动画结束时的平滑过渡时长（秒）。0 表示立即停止，大于 0 则动画数据渐变归零";
 
         // 中文标签
         private const string LabelType = "动画类型";
@@ -50,6 +53,7 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
         private const string LabelFrequency = "频率";
         private const string LabelCharDelay = "字符延迟";
         private const string LabelFadeDuration = "渐显时长";
+        private const string LabelFadeOutDuration = "过渡时长";
 
         // 分组标题
         private const string HeaderTime = "时间控制";
@@ -67,6 +71,8 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
         private const float CharDelayMax = 0.5f;
         private const float FadeDurationMin = 0.05f;
         private const float FadeDurationMax = 2f;
+        private const float FadeOutDurationMin = 0f;
+        private const float FadeOutDurationMax = 2f;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -82,6 +88,10 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
 
             // 播放速度（所有类型）
             height += Step();
+
+            // 过渡时长（非 Fade 且非循环）
+            if (animType != TextAnimationType.Fade)
+                height += Step();
 
             // 分组标题：效果参数
             height += HeaderHeight();
@@ -132,6 +142,12 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
 
             DrawSlider(ref y, x, w, property.FindPropertyRelative(PropSpeed),
                 LabelSpeed, TipSpeed, SpeedMin, SpeedMax);
+
+            if (animType != TextAnimationType.Fade)
+            {
+                DrawSlider(ref y, x, w, property.FindPropertyRelative(PropFadeOutDuration),
+                    LabelFadeOutDuration, TipFadeOutDuration, FadeOutDurationMin, FadeOutDurationMax);
+            }
 
             // --- 效果参数 ---
             DrawGroupHeader(ref y, x, w, HeaderEffect);
