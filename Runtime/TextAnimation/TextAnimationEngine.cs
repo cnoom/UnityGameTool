@@ -135,6 +135,14 @@ namespace CNoom.UnityGameTool.TextAnimation
         {
             if (_charCount == 0) return false;
 
+            // Once 模式使用独立逻辑
+            if (_config.PlayMode == TextAnimationPlayMode.Once)
+            {
+                return TickOnce(deltaTime);
+            }
+
+            // Continuous 模式（原有逻辑）
+
             // 过渡淡出阶段
             if (_isFadingOut)
             {
@@ -143,13 +151,11 @@ namespace CNoom.UnityGameTool.TextAnimation
 
                 if (fadeDur <= 0f || _fadeOutElapsed >= fadeDur)
                 {
-                    // 过渡完成
                     _isFadingOut = false;
                     ResetCharData();
                     return false;
                 }
 
-                // 先计算正常动画数据，再乘以淡出系数
                 ComputeAnimation();
                 ApplyFadeOut(_fadeOutElapsed / fadeDur);
                 return true;
@@ -164,12 +170,10 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 _isPlaying = false;
 
-                // 有过渡时长则进入 fadeout 阶段
                 if (_config.FadeOutDuration > 0f)
                 {
                     _isFadingOut = true;
                     _fadeOutElapsed = 0f;
-                    // 计算最后一帧的动画数据作为 fadeout 起点
                     ComputeAnimation();
                     return true;
                 }
@@ -179,8 +183,120 @@ namespace CNoom.UnityGameTool.TextAnimation
             }
 
             ComputeAnimation();
-
             return _isPlaying;
+        }
+
+        /// <summary>
+        /// Once 模式逐帧更新。每个字符有独立生命周期：未激活→动画中→已完成。
+        /// </summary>
+        private bool TickOnce(float deltaTime)
+        {
+            if (!_isPlaying) return false;
+
+            _elapsed += deltaTime * _config.Speed;
+            float charDur = _config.Duration;
+            bool anyActive = false;
+
+            for (int i = 0; i < _charCount; i++)
+            {
+                float charStart = i * _config.CharDelay;
+                float charTime = _elapsed - charStart;
+
+                if (charTime < 0f)
+                {
+                    // 未激活：不可见
+                    _charData[i] = new CharAnimationData
+                    {
+                        XOffset = 0f, YOffset = 0f, Scale = 1f, Alpha = 0f
+                    };
+                    anyActive = true;
+                }
+                else if (charDur > 0f && charTime < charDur)
+                {
+                    // 动画中：计算动画值并应用衰减包络
+                    ComputeCharOnce(i, charTime, charDur);
+                    anyActive = true;
+                }
+                else
+                {
+                    // 已完成：归位
+                    _charData[i] = new CharAnimationData
+                    {
+                        XOffset = 0f, YOffset = 0f, Scale = 1f, Alpha = 1f
+                    };
+                }
+            }
+
+            if (!anyActive)
+            {
+                _isPlaying = false;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Once 模式下计算单个字符的动画数据，应用衰减包络使动画平滑归零。
+        /// </summary>
+        private void ComputeCharOnce(int index, float charTime, float charDur)
+        {
+            // 衰减包络：从 1 线性衰减到 0
+            float envelope = Math.Max(0f, 1f - charTime / charDur);
+
+            // Fade 类型特殊处理：直接用 charTime 渐显
+            if (_config.Type == TextAnimationType.Fade)
+            {
+                float fadeDur = _config.FadeDuration;
+                float alpha = fadeDur > 0f ? Math.Min(1f, charTime / fadeDur) : 1f;
+                _charData[index] = new CharAnimationData
+                {
+                    XOffset = 0f, YOffset = 0f, Scale = 1f, Alpha = alpha
+                };
+                return;
+            }
+
+            // 使用正常的动画计算，然后乘以包络
+            float amp = _config.Amplitude;
+
+            switch (_config.Type)
+            {
+                case TextAnimationType.Wave:
+                {
+                    float freq = _config.Frequency;
+                    float offset = (float)Math.Sin(charTime * freq * Math.PI * 2f) * amp * envelope;
+                    _charData[index] = new CharAnimationData
+                    {
+                        XOffset = 0f, YOffset = offset, Scale = 1f, Alpha = 1f
+                    };
+                    break;
+                }
+                case TextAnimationType.Shake:
+                {
+                    _shakeFrameIndex++;
+                    float rx = PseudoRandom(_shakeSeedX[index], _shakeFrameIndex);
+                    float ry = PseudoRandom(_shakeSeedY[index], _shakeFrameIndex);
+                    _charData[index] = new CharAnimationData
+                    {
+                        XOffset = rx * amp * envelope,
+                        YOffset = ry * amp * envelope,
+                        Scale = 1f,
+                        Alpha = 1f
+                    };
+                    break;
+                }
+                case TextAnimationType.Bounce:
+                {
+                    float freq = _config.Frequency;
+                    float cycle = (float)Math.Abs(Math.Sin(charTime * freq * Math.PI));
+                    float scale = 1f + cycle * (amp / BounceAmplitudeDivisor) * envelope;
+                    _charData[index] = new CharAnimationData
+                    {
+                        XOffset = 0f, YOffset = 0f, Scale = scale, Alpha = 1f
+                    };
+                    break;
+                }
+            }
         }
 
         /// <summary>

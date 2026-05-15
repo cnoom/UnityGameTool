@@ -19,6 +19,17 @@ namespace CNoom.UnityGameTool.TextAnimation
     }
 
     /// <summary>
+    /// 动画播放模式
+    /// </summary>
+    public enum TextAnimationPlayMode
+    {
+        /// <summary>持续动画，所有字符共享时间轴持续运动</summary>
+        Continuous,
+        /// <summary>逐字符单次执行，每个字符做一次动画后归位停住（展开效果）</summary>
+        Once
+    }
+
+    /// <summary>
     /// 文字动画效果配置。支持内联序列化，可直接在 Inspector 中编辑。
     /// </summary>
     [Serializable]
@@ -29,6 +40,9 @@ namespace CNoom.UnityGameTool.TextAnimation
 
         [SerializeField]
         private TextAnimationType _type = TextAnimationType.Wave;
+
+        [SerializeField]
+        private TextAnimationPlayMode _playMode = TextAnimationPlayMode.Continuous;
 
         [SerializeField]
         private float _duration = -1f;
@@ -53,6 +67,9 @@ namespace CNoom.UnityGameTool.TextAnimation
 
         /// <summary>动画类型</summary>
         public TextAnimationType Type => _type;
+
+        /// <summary>播放模式：持续动画或逐字符单次展开</summary>
+        public TextAnimationPlayMode PlayMode => _playMode;
 
         /// <summary>动画持续时间（秒），-1 表示无限循环</summary>
         public float Duration => _duration;
@@ -83,6 +100,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// </summary>
         public TextAnimationConfig(
             TextAnimationType type = TextAnimationType.Wave,
+            TextAnimationPlayMode playMode = TextAnimationPlayMode.Continuous,
             float duration = -1f,
             float speed = 1f,
             float amplitude = 10f,
@@ -92,6 +110,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             float fadeOutDuration = 0.3f)
         {
             _type = type;
+            _playMode = playMode;
             _duration = duration;
             _speed = speed;
             _amplitude = amplitude;

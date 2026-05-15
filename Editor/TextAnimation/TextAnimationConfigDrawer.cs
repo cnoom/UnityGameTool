@@ -20,12 +20,17 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
         private const string PropCharDelay = "_charDelay";
         private const string PropFadeDuration = "_fadeDuration";
         private const string PropFadeOutDuration = "_fadeOutDuration";
+        private const string PropPlayMode = "_playMode";
 
         // 中文 Tooltip
         private const string TipType =
             "动画效果类型\n• Wave：正弦波上下浮动\n• Shake：随机位置抖动\n• Bounce：缩放弹跳\n• Fade：逐字渐显";
+        private const string TipPlayMode =
+            "播放模式\n• Continuous：持续动画，所有字符共享时间轴\n• Once：逐字符单次执行，做一次后归位（展开效果）";
         private const string TipDuration =
             "动画总时长（秒）。设为 -1 表示无限循环播放";
+        private const string TipDurationOnce =
+            "单字符动画时长（秒）。每个字符做一次动画后归位停住";
         private const string TipSpeed =
             "播放速度倍率。1 为正常速度，大于 1 加速";
         private const string TipAmplitudeWave =
@@ -40,6 +45,8 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             "弹跳频率。值越大弹跳越快";
         private const string TipCharDelay =
             "相邻字符之间的动画延迟（秒）。0 为同时运动，大于 0 产生波浪扩散效果";
+        private const string TipCharDelayOnce =
+            "相邻字符的展开间隔（秒）。0 为同时展开，大于 0 产生逐字展开效果";
         private const string TipFadeDuration =
             "每个字符从完全透明到完全显示的渐变时长（秒）";
         private const string TipFadeOutDuration =
@@ -47,11 +54,14 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
 
         // 中文标签
         private const string LabelType = "动画类型";
+        private const string LabelPlayMode = "播放模式";
         private const string LabelDuration = "持续时间";
+        private const string LabelDurationOnce = "单字符时长";
         private const string LabelSpeed = "播放速度";
         private const string LabelAmplitude = "幅度";
         private const string LabelFrequency = "频率";
         private const string LabelCharDelay = "字符延迟";
+        private const string LabelCharDelayOnce = "展开间隔";
         private const string LabelFadeDuration = "渐显时长";
         private const string LabelFadeOutDuration = "过渡时长";
 
@@ -77,42 +87,50 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var animType = (TextAnimationType)property.FindPropertyRelative(PropType).enumValueIndex;
-            float height = SingleLine();
+            var playMode = (TextAnimationPlayMode)property.FindPropertyRelative(PropPlayMode).enumValueIndex;
+            bool isFade = animType == TextAnimationType.Fade;
+            bool isOnce = playMode == TextAnimationPlayMode.Once;
+            float height = SingleLine(); // 动画类型
+            height += SingleLine(); // 播放模式
 
             // 分组标题：时间控制
             height += HeaderHeight();
 
-            // 持续时间（非 Fade）
-            if (animType != TextAnimationType.Fade)
-                height += Step();
+            if (!isFade)
+            {
+                height += Step(); // Duration / 单字符时长
+            }
 
-            // 播放速度（所有类型）
-            height += Step();
+            height += Step(); // 播放速度
 
-            // 过渡时长（非 Fade 且非循环）
-            if (animType != TextAnimationType.Fade)
+            // 过渡时长（仅 Continuous 非 Fade）
+            if (!isOnce && !isFade)
+            {
                 height += Step();
+            }
 
             // 分组标题：效果参数
             height += HeaderHeight();
 
-            // 幅度（非 Fade）
-            if (animType != TextAnimationType.Fade)
-                height += Step();
+            if (!isFade)
+            {
+                height += Step(); // 幅度
+            }
 
-            // 频率（Wave、Bounce）
             if (animType == TextAnimationType.Wave || animType == TextAnimationType.Bounce)
-                height += Step();
+            {
+                height += Step(); // 频率
+            }
 
             // 分组标题：字符间延迟
             height += HeaderHeight();
 
-            // 字符延迟（所有类型）
-            height += Step();
+            height += Step(); // 字符延迟 / 展开间隔
 
-            // 渐显时长（仅 Fade）
-            if (animType == TextAnimationType.Fade)
-                height += Step();
+            if (isFade)
+            {
+                height += Step(); // 渐显时长
+            }
 
             return height;
         }
@@ -122,7 +140,11 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             EditorGUI.BeginProperty(position, label, property);
 
             var typeProp = property.FindPropertyRelative(PropType);
+            var playModeProp = property.FindPropertyRelative(PropPlayMode);
             var animType = (TextAnimationType)typeProp.enumValueIndex;
+            var playMode = (TextAnimationPlayMode)playModeProp.enumValueIndex;
+            bool isFade = animType == TextAnimationType.Fade;
+            bool isOnce = playMode == TextAnimationPlayMode.Once;
 
             float y = position.y;
             float x = position.x;
@@ -131,19 +153,25 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             // --- 动画类型 ---
             DrawEnum(ref y, x, w, typeProp, LabelType, TipType);
 
+            // --- 播放模式 ---
+            DrawEnum(ref y, x, w, playModeProp, LabelPlayMode, TipPlayMode);
+
             // --- 时间控制 ---
             DrawGroupHeader(ref y, x, w, HeaderTime);
 
-            if (animType != TextAnimationType.Fade)
+            if (!isFade)
             {
+                string durLabel = isOnce ? LabelDurationOnce : LabelDuration;
+                string durTip = isOnce ? TipDurationOnce : TipDuration;
                 DrawFloat(ref y, x, w, property.FindPropertyRelative(PropDuration),
-                    LabelDuration, TipDuration);
+                    durLabel, durTip);
             }
 
             DrawSlider(ref y, x, w, property.FindPropertyRelative(PropSpeed),
                 LabelSpeed, TipSpeed, SpeedMin, SpeedMax);
 
-            if (animType != TextAnimationType.Fade)
+            // 过渡时长（仅 Continuous 非 Fade）
+            if (!isOnce && !isFade)
             {
                 DrawSlider(ref y, x, w, property.FindPropertyRelative(PropFadeOutDuration),
                     LabelFadeOutDuration, TipFadeOutDuration, FadeOutDurationMin, FadeOutDurationMax);
@@ -152,7 +180,7 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             // --- 效果参数 ---
             DrawGroupHeader(ref y, x, w, HeaderEffect);
 
-            if (animType != TextAnimationType.Fade)
+            if (!isFade)
             {
                 string ampTip = animType switch
                 {
@@ -177,10 +205,12 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             // --- 字符间延迟 ---
             DrawGroupHeader(ref y, x, w, HeaderCharSpacing);
 
+            string delayLabel = isOnce ? LabelCharDelayOnce : LabelCharDelay;
+            string delayTip = isOnce ? TipCharDelayOnce : TipCharDelay;
             DrawSlider(ref y, x, w, property.FindPropertyRelative(PropCharDelay),
-                LabelCharDelay, TipCharDelay, CharDelayMin, CharDelayMax);
+                delayLabel, delayTip, CharDelayMin, CharDelayMax);
 
-            if (animType == TextAnimationType.Fade)
+            if (isFade)
             {
                 DrawSlider(ref y, x, w, property.FindPropertyRelative(PropFadeDuration),
                     LabelFadeDuration, TipFadeDuration, FadeDurationMin, FadeDurationMax);

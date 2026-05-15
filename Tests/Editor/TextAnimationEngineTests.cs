@@ -192,5 +192,110 @@ namespace CNoom.UnityGameTool.Tests
                 Assert.AreEqual(1f, data.Alpha);
             }
         }
+
+        #region Once 模式测试
+
+        [Test]
+        public void Once_Wave_UnactivatedCharsAreInvisible()
+        {
+            _config = new TextAnimationConfig(
+                type: TextAnimationType.Wave,
+                playMode: TextAnimationPlayMode.Once,
+                duration: 0.5f,
+                charDelay: 0.1f);
+            _engine = new TextAnimationEngine(_config);
+            _engine.Begin(5);
+
+            // 第 1 帧，只有字符 0 激活
+            _engine.Tick(0.01f);
+
+            // 字符 1~4 应不可见
+            for (int i = 1; i < _engine.CharCount; i++)
+            {
+                ref readonly var data = ref _engine.GetCharData(i);
+                Assert.AreEqual(0f, data.Alpha, $"字符 {i} 未激活时应 Alpha=0");
+            }
+        }
+
+        [Test]
+        public void Once_StopsWhenAllCharsComplete()
+        {
+            _config = new TextAnimationConfig(
+                type: TextAnimationType.Wave,
+                playMode: TextAnimationPlayMode.Once,
+                duration: 0.2f,
+                charDelay: 0.05f);
+            _engine = new TextAnimationEngine(_config);
+            _engine.Begin(3);
+
+            // 全局结束时间 = 0.05*2 + 0.2 = 0.3
+            // 推进到超过这个时间
+            for (int i = 0; i < 50; i++)
+            {
+                _engine.Tick(0.016f);
+            }
+
+            Assert.IsFalse(_engine.IsPlaying, "Once 模式所有字符完成后应停止");
+
+            // 所有字符应归位
+            for (int i = 0; i < _engine.CharCount; i++)
+            {
+                ref readonly var data = ref _engine.GetCharData(i);
+                Assert.AreEqual(0f, data.XOffset);
+                Assert.AreEqual(0f, data.YOffset);
+                Assert.AreEqual(1f, data.Scale);
+                Assert.AreEqual(1f, data.Alpha);
+            }
+        }
+
+        [Test]
+        public void Once_Fade_SameBehaviorAsContinuous()
+        {
+            _config = new TextAnimationConfig(
+                type: TextAnimationType.Fade,
+                playMode: TextAnimationPlayMode.Once,
+                duration: 1f,
+                fadeDuration: 0.5f);
+            _engine = new TextAnimationEngine(_config);
+            _engine.Begin(3);
+
+            _engine.Tick(0.1f);
+
+            // 第一个字符应该有部分透明度
+            ref readonly var data0 = ref _engine.GetCharData(0);
+            Assert.Greater(data0.Alpha, 0f, "Fade Once 模式已激活字符应有透明度变化");
+            Assert.Less(data0.Alpha, 1f, "渐显未完成时 Alpha < 1");
+        }
+
+        [Test]
+        public void Once_Wave_HasEnvelopeDecay()
+        {
+            _config = new TextAnimationConfig(
+                type: TextAnimationType.Wave,
+                playMode: TextAnimationPlayMode.Once,
+                duration: 1f,
+                amplitude: 20f,
+                frequency: 5f);
+            _engine = new TextAnimationEngine(_config);
+            _engine.Begin(1);
+
+            // 早期帧：偏移量较大
+            _engine.Tick(0.05f);
+            ref readonly var earlyData = ref _engine.GetCharData(0);
+            float earlyOffset = Math.Abs(earlyData.YOffset);
+
+            // 接近结束帧：偏移量应该因包络衰减而减小
+            for (int i = 0; i < 80; i++)
+            {
+                _engine.Tick(0.016f);
+            }
+            ref readonly var lateData = ref _engine.GetCharData(0);
+            float lateOffset = Math.Abs(lateData.YOffset);
+
+            Assert.Less(lateOffset, earlyOffset,
+                "Once 模式包络衰减应使偏移量随时间减小");
+        }
+
+        #endregion
     }
 }
