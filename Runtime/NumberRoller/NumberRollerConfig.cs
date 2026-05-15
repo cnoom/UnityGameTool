@@ -110,6 +110,31 @@ namespace CNoom.UnityGameTool.NumberRoller
         public double SnapThreshold => _snapThreshold;
 
         /// <summary>
+        /// 创建自定义配置。
+        /// </summary>
+        public NumberRollerConfig(
+            float duration = 1f,
+            RollerEaseType easeType = RollerEaseType.EaseOut,
+            RollerFormatType formatType = RollerFormatType.Integer,
+            int decimalPlaces = 0,
+            bool useThousandsSeparator = true,
+            string customFormat = "N2",
+            string positivePrefix = "",
+            bool showNegativeSign = true,
+            double snapThreshold = 0.5)
+        {
+            _duration = duration;
+            _easeType = easeType;
+            _formatType = formatType;
+            _decimalPlaces = decimalPlaces;
+            _useThousandsSeparator = useThousandsSeparator;
+            _customFormat = customFormat;
+            _positivePrefix = positivePrefix;
+            _showNegativeSign = showNegativeSign;
+            _snapThreshold = snapThreshold;
+        }
+
+        /// <summary>
         /// 将数值格式化为显示文本。
         /// </summary>
         /// <param name="value">当前值</param>

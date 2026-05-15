@@ -45,7 +45,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_Wave_ProducesYOffset()
         {
-            _config.Type = TextAnimationType.Wave;
+            _config = new TextAnimationConfig(type: TextAnimationType.Wave);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(5);
 
@@ -64,7 +64,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_Shake_ProducesXYOffset()
         {
-            _config.Type = TextAnimationType.Shake;
+            _config = new TextAnimationConfig(type: TextAnimationType.Shake);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(5);
 
@@ -83,7 +83,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_Bounce_ProducesScale()
         {
-            _config.Type = TextAnimationType.Bounce;
+            _config = new TextAnimationConfig(type: TextAnimationType.Bounce);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(3);
 
@@ -101,9 +101,10 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_Fade_ProducesAlphaChange()
         {
-            _config.Type = TextAnimationType.Fade;
-            _config.FadeDuration = 0.5f;
-            _config.Duration = 1f;
+            _config = new TextAnimationConfig(
+                type: TextAnimationType.Fade,
+                fadeDuration: 0.5f,
+                duration: 1f);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(5);
 
@@ -122,8 +123,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_NonLooping_StopsAfterDuration()
         {
-            _config.Duration = 0.1f;
-            _config.IsLooping = false;
+            _config = new TextAnimationConfig(duration: 0.1f);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(3);
 
@@ -139,8 +139,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_Looping_KeepsPlaying()
         {
-            _config.Duration = 0.1f;
-            _config.IsLooping = true;
+            _config = new TextAnimationConfig(duration: -1f);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(3);
 
@@ -176,7 +175,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void SkipToEnd_ResetsCharData()
         {
-            _config.Type = TextAnimationType.Wave;
+            _config = new TextAnimationConfig(type: TextAnimationType.Wave);
             _engine = new TextAnimationEngine(_config);
             _engine.Begin(5);
 

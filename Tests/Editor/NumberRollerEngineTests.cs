@@ -39,7 +39,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_AdvancesCurrentValue()
         {
-            _config = new NumberRollerConfig { Duration = 1f };
+            _config = new NumberRollerConfig(duration: 1f);
             _engine = new NumberRollerEngine(_config);
 
             _engine.Begin(0, 100);
@@ -53,7 +53,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_CompletesWhenDurationReached()
         {
-            _config = new NumberRollerConfig { Duration = 0.5f };
+            _config = new NumberRollerConfig(duration: 0.5f);
             _engine = new NumberRollerEngine(_config);
 
             _engine.Begin(0, 100);
@@ -67,7 +67,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_SnapsWhenCloseEnough()
         {
-            _config = new NumberRollerConfig { Duration = 1f, SnapThreshold = 2.0 };
+            _config = new NumberRollerConfig(duration: 1f, snapThreshold: 2.0);
             _engine = new NumberRollerEngine(_config);
 
             _engine.Begin(0, 100);
@@ -114,7 +114,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Progress_ReturnsCorrectRatio()
         {
-            _config = new NumberRollerConfig { Duration = 2f };
+            _config = new NumberRollerConfig(duration: 2f);
             _engine = new NumberRollerEngine(_config);
 
             _engine.Begin(0, 100);

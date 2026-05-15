@@ -85,5 +85,26 @@ namespace CNoom.UnityGameTool.TextAnimation
 
         /// <summary>是否为循环模式</summary>
         public bool IsLooping => _duration < 0f;
+
+        /// <summary>
+        /// 创建自定义配置。
+        /// </summary>
+        public TextAnimationConfig(
+            TextAnimationType type = TextAnimationType.Wave,
+            float duration = -1f,
+            float speed = 1f,
+            float amplitude = 10f,
+            float frequency = 2f,
+            float charDelay = 0.05f,
+            float fadeDuration = 0.3f)
+        {
+            _type = type;
+            _duration = duration;
+            _speed = speed;
+            _amplitude = amplitude;
+            _frequency = frequency;
+            _charDelay = charDelay;
+            _fadeDuration = fadeDuration;
+        }
     }
 }
