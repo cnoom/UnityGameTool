@@ -24,41 +24,27 @@ namespace CNoom.UnityGameTool.TextAnimation
     [Serializable]
     public class TextAnimationConfig
     {
-        [Header("动画类型")]
-        [Tooltip("文字动画效果类型")]
+        // 字段由 TextAnimationConfigDrawer 自定义绘制，
+        // Inspector 显示的标签和 Tooltip 由 Drawer 控制。
+
         [SerializeField]
         private TextAnimationType _type = TextAnimationType.Wave;
 
-        [Header("时间控制")]
-        [Tooltip("动画持续时间（秒），设为 -1 表示无限循环")]
         [SerializeField]
         private float _duration = -1f;
 
-        [Tooltip("动画播放速度倍率")]
-        [Range(0.1f, 10f)]
         [SerializeField]
         private float _speed = 1f;
 
-        [Header("幅度与频率")]
-        [Tooltip("动画幅度（像素），控制偏移或缩放强度")]
-        [Range(0f, 100f)]
         [SerializeField]
         private float _amplitude = 10f;
 
-        [Tooltip("动画频率，控制波浪密度或抖动速度")]
-        [Range(0.1f, 20f)]
         [SerializeField]
         private float _frequency = 2f;
 
-        [Header("字符间延迟")]
-        [Tooltip("相邻字符之间的动画延迟（秒），产生波浪扩散效果")]
-        [Range(0f, 0.5f)]
         [SerializeField]
         private float _charDelay = 0.05f;
 
-        [Header("Fade 专用")]
-        [Tooltip("Fade 模式下每个字符的渐显持续时间（秒）")]
-        [Range(0.05f, 2f)]
         [SerializeField]
         private float _fadeDuration = 0.3f;
 

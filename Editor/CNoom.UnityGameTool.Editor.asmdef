@@ -1,0 +1,20 @@
+{
+    "name": "CNoom.UnityGameTool.Editor",
+    "rootNamespace": "CNoom.UnityGameTool.Editor",
+    "references": [
+        "CNoom.UnityGameTool.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
