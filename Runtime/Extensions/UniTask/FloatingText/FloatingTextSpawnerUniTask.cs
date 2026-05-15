@@ -61,8 +61,8 @@ namespace CNoom.UnityGameTool.FloatingText
         /// <inheritdoc />
         public int Spawn(FloatingTextRequest request)
         {
-            float randomX = Random.Range(-_config.RandomSpreadX, _config.RandomSpreadX);
-            float randomY = Random.Range(-_config.RandomSpreadY, _config.RandomSpreadY);
+            float randomX = UnityEngine.Random.Range(-_config.RandomSpreadX, _config.RandomSpreadX);
+            float randomY = UnityEngine.Random.Range(-_config.RandomSpreadY, _config.RandomSpreadY);
 
             Vector3 worldPos = new Vector3(request.WorldX, 0f, request.WorldZ);
             Vector3 screenPos = _worldCamera.WorldToScreenPoint(worldPos);

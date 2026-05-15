@@ -57,8 +57,8 @@ namespace CNoom.UnityGameTool.FloatingText
         public int Spawn(FloatingTextRequest request)
         {
             // 生成随机偏移
-            float randomX = Random.Range(-_config.RandomSpreadX, _config.RandomSpreadX);
-            float randomY = Random.Range(-_config.RandomSpreadY, _config.RandomSpreadY);
+            float randomX = UnityEngine.Random.Range(-_config.RandomSpreadX, _config.RandomSpreadX);
+            float randomY = UnityEngine.Random.Range(-_config.RandomSpreadY, _config.RandomSpreadY);
 
             // 世界坐标转屏幕坐标
             Vector3 worldPos = new Vector3(request.WorldX, 0f, request.WorldZ);
