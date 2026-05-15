@@ -35,6 +35,14 @@ namespace CNoom.UnityGameTool.TextAnimation
         public void Play(int visibleCharacterCount)
         {
             if (visibleCharacterCount <= 0) return;
+
+            // 清理上一次动画的顶点残留
+            if (_engine.IsPlaying)
+            {
+                _engine.Stop();
+                RestoreMesh();
+            }
+
             _engine.Begin(visibleCharacterCount);
             enabled = true;
         }
@@ -70,6 +78,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             if (!stillPlaying)
             {
                 enabled = false;
+                RestoreMesh();
                 OnComplete?.Invoke();
             }
         }

@@ -37,6 +37,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         {
             _textComponent = GetComponent<TMP_Text>();
             _engine = new TextAnimationEngine(_config);
+            enabled = false;
         }
 
         /// <inheritdoc />
@@ -59,8 +60,16 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 if (visibleCharacterCount <= 0) return;
 
+                // 清理上一次动画的顶点残留
+                if (_engine.IsPlaying)
+                {
+                    _engine.Stop();
+                    RestoreMesh();
+                }
+
                 _engine.Begin(visibleCharacterCount);
                 _isPlaying = true;
+                enabled = true;
 
                 // 循环动画需要外部取消
                 if (_config.IsLooping)
@@ -76,6 +85,7 @@ namespace CNoom.UnityGameTool.TextAnimation
                 }
 
                 _isPlaying = false;
+                enabled = false;
                 RestoreMesh();
                 OnComplete?.Invoke();
             }
@@ -83,6 +93,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 // 由 Stop/Skip/Destroy 触发取消
                 _isPlaying = false;
+                enabled = false;
             }
         }
 
@@ -93,6 +104,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 _engine.Stop();
                 _isPlaying = false;
+                enabled = false;
                 CancelPlay();
                 RestoreMesh();
             }
@@ -105,6 +117,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 _engine.SkipToEnd();
                 _isPlaying = false;
+                enabled = false;
                 CancelPlay();
                 RestoreMesh();
                 OnComplete?.Invoke();
@@ -132,6 +145,8 @@ namespace CNoom.UnityGameTool.TextAnimation
             if (!stillPlaying)
             {
                 _isPlaying = false;
+                enabled = false;
+                RestoreMesh();
             }
         }
 
