@@ -308,16 +308,6 @@ namespace CNoom.UnityGameTool.TextAnimation
                 // 每个字符从 0 渐显到 1
                 float alpha = fadeDur > 0f ? Math.Min(1f, t / fadeDur) : 1f;
 
-                // 非循环模式：全部显示完后保持
-                if (!_config.IsLooping)
-                {
-                    float totalDuration = _config.Duration;
-                    if (totalDuration > 0f && _elapsed >= totalDuration)
-                    {
-                        alpha = 1f;
-                    }
-                }
-
                 _charData[i].XOffset = 0f;
                 _charData[i].YOffset = 0f;
                 _charData[i].Scale = 1f;
