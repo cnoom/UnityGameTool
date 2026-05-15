@@ -222,9 +222,10 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// </summary>
         private static float PseudoRandom(float seed, int frame)
         {
-            // 简单的 hash 组合，产生看起来随机的值
             float x = (float)(Math.Sin(seed * HashSeedFactor + frame * HashFrameFactor) * HashScale);
-            return x - (float)Math.Floor(x) * 2f - 1f;
+            // 取小数部分映射到 [0, 1]，再转换到 [-1, 1]
+            float frac = x - (float)Math.Floor(x);
+            return frac * 2f - 1f;
         }
 
         private void GenerateShakeSeeds(int count)

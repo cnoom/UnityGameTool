@@ -99,7 +99,11 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 // 由 Stop/Skip/Destroy 触发取消
                 _isPlaying = false;
-                enabled = false;
+                // 对象可能已被销毁（如退出游戏时），安全访问
+                if (this != null)
+                {
+                    enabled = false;
+                }
             }
         }
 
