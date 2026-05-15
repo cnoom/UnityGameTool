@@ -28,6 +28,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         {
             _textComponent = GetComponent<TMP_Text>();
             _engine = new TextAnimationEngine(_config);
+            enabled = false;
         }
 
         /// <inheritdoc />
@@ -35,6 +36,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         {
             if (visibleCharacterCount <= 0) return;
             _engine.Begin(visibleCharacterCount);
+            enabled = true;
         }
 
         /// <inheritdoc />
@@ -44,6 +46,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 _engine.Stop();
                 RestoreMesh();
+                enabled = false;
             }
         }
 
@@ -54,19 +57,19 @@ namespace CNoom.UnityGameTool.TextAnimation
             {
                 _engine.SkipToEnd();
                 RestoreMesh();
+                enabled = false;
                 OnComplete?.Invoke();
             }
         }
 
         private void Update()
         {
-            if (!_engine.IsPlaying) return;
-
             bool stillPlaying = _engine.Tick(Time.deltaTime);
             ApplyToMesh();
 
             if (!stillPlaying)
             {
+                enabled = false;
                 OnComplete?.Invoke();
             }
         }

@@ -26,6 +26,19 @@ namespace CNoom.UnityGameTool.TextAnimation
     /// </summary>
     public class TextAnimationEngine
     {
+        // 伪随机 hash 系数
+        private const float HashSeedFactor = 127.1f;
+        private const float HashFrameFactor = 311.7f;
+        private const float HashScale = 43758.5453f;
+
+        // Shake 种子系数
+        private const float ShakeFactorX = 1.37f;
+        private const float ShakeOffsetX = 0.5f;
+        private const float ShakeFactorY = 2.73f;
+        private const float ShakeOffsetY = 1.3f;
+
+        // Bounce 缩放因子
+        private const float BounceAmplitudeDivisor = 50f;
         private readonly TextAnimationConfig _config;
 
         // 状态
@@ -66,6 +79,9 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// <returns>该字符的动画偏移/缩放/透明度数据</returns>
         public ref readonly CharAnimationData GetCharData(int index)
         {
+            if (index < 0 || index >= _charCount)
+                throw new ArgumentOutOfRangeException(nameof(index),
+                    $"索引 {index} 超出范围 [0, {_charCount})");
             return ref _charData[index];
         }
 
@@ -207,7 +223,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         private static float PseudoRandom(float seed, int frame)
         {
             // 简单的 hash 组合，产生看起来随机的值
-            float x = (float)(Math.Sin(seed * 127.1f + frame * 311.7f) * 43758.5453);
+            float x = (float)(Math.Sin(seed * HashSeedFactor + frame * HashFrameFactor) * HashScale);
             return x - (float)Math.Floor(x) * 2f - 1f;
         }
 
@@ -216,8 +232,8 @@ namespace CNoom.UnityGameTool.TextAnimation
             for (int i = 0; i < count; i++)
             {
                 // 使用字符索引作为基础种子
-                _shakeSeedX[i] = i * 1.37f + 0.5f;
-                _shakeSeedY[i] = i * 2.73f + 1.3f;
+                _shakeSeedX[i] = i * ShakeFactorX + ShakeOffsetX;
+                _shakeSeedY[i] = i * ShakeFactorY + ShakeOffsetY;
             }
         }
 
@@ -271,7 +287,7 @@ namespace CNoom.UnityGameTool.TextAnimation
                 float cycle = (float)Math.Abs(Math.Sin(t * freq * Math.PI));
                 float decay = _config.IsLooping ? 1f : Math.Max(0f, 1f - t / Math.Max(0.001f, _config.Duration));
 
-                float scale = 1f + cycle * (amp / 50f) * decay;
+                float scale = 1f + cycle * (amp / BounceAmplitudeDivisor) * decay;
 
                 _charData[i].XOffset = 0f;
                 _charData[i].YOffset = 0f;

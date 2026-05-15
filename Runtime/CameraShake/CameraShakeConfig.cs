@@ -90,10 +90,40 @@ namespace CNoom.UnityGameTool.CameraShake
         /// <summary>
         /// 便捷构造：指定强度和持续时间。
         /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">参数不合法时抛出</exception>
         public CameraShakeConfig(float intensity, float duration)
         {
+            if (intensity < 0f)
+                throw new ArgumentOutOfRangeException(nameof(intensity), "震动强度不能为负数");
+            if (duration <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(duration), "震动持续时间必须大于 0");
             _intensity = intensity;
             _duration = duration;
+        }
+
+        /// <summary>
+        /// 校验配置参数是否合法。由 Engine 在 AddShake 时调用。
+        /// </summary>
+        /// <returns>校验结果，包含是否合法和错误信息</returns>
+        public bool Validate(out string errorMessage)
+        {
+            if (_intensity < 0f)
+            {
+                errorMessage = "震动强度不能为负数";
+                return false;
+            }
+            if (_duration <= 0f)
+            {
+                errorMessage = "震动持续时间必须大于 0";
+                return false;
+            }
+            if (_frequency <= 0f)
+            {
+                errorMessage = "震动频率必须大于 0";
+                return false;
+            }
+            errorMessage = null;
+            return true;
         }
     }
 }

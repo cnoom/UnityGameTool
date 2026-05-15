@@ -21,14 +21,14 @@ namespace CNoom.UnityGameTool.CameraShake
     /// </summary>
     internal class ShakeInstance
     {
-        public int Id;
-        public CameraShakeConfig Config;
-        public float Elapsed;
-        public float SeedX;
-        public float SeedY;
-        public float SeedZRot;
-        public bool IsActive;
-        public bool Completed;
+        public int Id { get; set; }
+        public CameraShakeConfig Config { get; set; }
+        public float Elapsed { get; set; }
+        public float SeedX { get; set; }
+        public float SeedY { get; set; }
+        public float SeedZRot { get; set; }
+        public bool IsActive { get; set; }
+        public bool Completed { get; set; }
     }
 
     /// <summary>
@@ -37,6 +37,13 @@ namespace CNoom.UnityGameTool.CameraShake
     /// </summary>
     public class CameraShakeEngine
     {
+        // 噪声种子系数
+        private const float SeedFactorX = 1.37f;
+        private const float SeedOffsetX = 0.5f;
+        private const float SeedFactorY = 2.73f;
+        private const float SeedOffsetY = 1.3f;
+        private const float SeedFactorZRot = 3.91f;
+        private const float SeedOffsetZRot = 2.1f;
         private readonly CameraShakeConfig _defaultConfig;
         private readonly List<ShakeInstance> _instances = new List<ShakeInstance>();
         private readonly List<int> _completedThisFrame = new List<int>();
@@ -65,14 +72,15 @@ namespace CNoom.UnityGameTool.CameraShake
         public int AddShake(CameraShakeConfig config)
         {
             var cfg = config ?? _defaultConfig;
+            int id = _nextId++;
             var instance = new ShakeInstance
             {
-                Id = _nextId++,
+                Id = id,
                 Config = cfg,
                 Elapsed = 0f,
-                SeedX = _nextId * 1.37f + 0.5f,
-                SeedY = _nextId * 2.73f + 1.3f,
-                SeedZRot = _nextId * 3.91f + 2.1f,
+                SeedX = id * SeedFactorX + SeedOffsetX,
+                SeedY = id * SeedFactorY + SeedOffsetY,
+                SeedZRot = id * SeedFactorZRot + SeedOffsetZRot,
                 IsActive = true,
                 Completed = false
             };
@@ -145,7 +153,8 @@ namespace CNoom.UnityGameTool.CameraShake
         /// <param name="completedIds">填充已完成 ID 列表</param>
         public void GetCompletedIds(List<int> completedIds)
         {
-            if (completedIds == null) return;
+            if (completedIds == null)
+                throw new ArgumentNullException(nameof(completedIds));
             completedIds.AddRange(_completedThisFrame);
         }
 

@@ -103,32 +103,33 @@ namespace CNoom.UnityGameTool.Timer
         {
             while (_engine.IsRunning || _engine.IsPaused)
             {
+                if (_engine.IsRunning)
+                {
+                    float dt = _config.UseUnscaledTime
+                        ? Time.unscaledDeltaTime
+                        : Time.deltaTime;
+
+                    var result = _engine.Tick(dt);
+
+                    if (result.Ticked || result.WarningTriggered || result.Completed)
+                    {
+                        OnUpdate?.Invoke(_engine.Elapsed, _engine.Remaining);
+                    }
+
+                    if (result.WarningTriggered)
+                    {
+                        OnWarning?.Invoke(_engine.Remaining);
+                    }
+
+                    if (result.Completed)
+                    {
+                        _tickCoroutine = null;
+                        OnComplete?.Invoke();
+                        yield break;
+                    }
+                }
+
                 yield return null;
-
-                if (!_engine.IsRunning) continue;
-
-                float dt = _config.UseUnscaledTime
-                    ? Time.unscaledDeltaTime
-                    : Time.deltaTime;
-
-                var result = _engine.Tick(dt);
-
-                if (result.Ticked || result.WarningTriggered || result.Completed)
-                {
-                    OnUpdate?.Invoke(_engine.Elapsed, _engine.Remaining);
-                }
-
-                if (result.WarningTriggered)
-                {
-                    OnWarning?.Invoke(_engine.Remaining);
-                }
-
-                if (result.Completed)
-                {
-                    _tickCoroutine = null;
-                    OnComplete?.Invoke();
-                    yield break;
-                }
             }
 
             _tickCoroutine = null;

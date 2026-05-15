@@ -112,12 +112,19 @@ namespace CNoom.UnityGameTool.CameraShake
             }
         }
 
+        /// <summary>
+        /// 重置原始位置缓存。如果外部代码修改了 Camera 的 localPosition，
+        /// 调用此方法使下次震动捕获最新位置。
+        /// </summary>
+        public void ResetOrigin()
+        {
+            _hasOriginal = false;
+        }
+
         private IEnumerator TickRoutine()
         {
-            while (_engine.IsShaking)
+            do
             {
-                yield return null;
-
                 var offset = _engine.Tick(Time.deltaTime);
 
                 // 触发完成回调
@@ -140,7 +147,9 @@ namespace CNoom.UnityGameTool.CameraShake
                 {
                     transform.localRotation = _originalLocalRot;
                 }
-            }
+
+                yield return null;
+            } while (_engine.IsShaking);
 
             _tickCoroutine = null;
             RestoreTransform();

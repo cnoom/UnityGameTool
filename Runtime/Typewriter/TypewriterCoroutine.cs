@@ -84,6 +84,13 @@ namespace CNoom.UnityGameTool.Typewriter
             while (_engine.IsPlaying)
             {
                 int index = _engine.CurrentIndex;
+
+                // 边界检查：防止 TMP 富文本解析导致 characterCount 变化
+                if (index >= _textComponent.textInfo.characterCount)
+                {
+                    break;
+                }
+
                 char c = _textComponent.textInfo.characterInfo[index].character;
                 var (hasMore, delay) = _engine.Advance(c);
 
@@ -95,9 +102,15 @@ namespace CNoom.UnityGameTool.Typewriter
                     break;
                 }
 
+                // 使用累计计时替代 WaitForSeconds，避免每字符 GC 分配
                 if (delay > 0f)
                 {
-                    yield return new WaitForSeconds(delay);
+                    float timer = 0f;
+                    while (timer < delay)
+                    {
+                        yield return null;
+                        timer += Time.deltaTime;
+                    }
                 }
             }
 

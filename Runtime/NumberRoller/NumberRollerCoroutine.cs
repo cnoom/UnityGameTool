@@ -100,12 +100,12 @@ namespace CNoom.UnityGameTool.NumberRoller
 
             while (_engine.IsPlaying)
             {
-                yield return null;
-
                 _engine.Tick(Time.deltaTime);
                 string text = _engine.GetFormattedValue();
                 _textComponent.text = text;
                 OnUpdate?.Invoke(_engine.CurrentValue, text);
+
+                yield return null;
             }
 
             _playCoroutine = null;
