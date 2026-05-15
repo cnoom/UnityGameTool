@@ -73,6 +73,9 @@ namespace CNoom.UnityGameTool.Editor.TextAnimation
             var animType = (TextAnimationType)property.FindPropertyRelative(PropType).enumValueIndex;
             float height = SingleLine();
 
+            // 分组标题：时间控制
+            height += HeaderHeight();
+
             // 持续时间（非 Fade）
             if (animType != TextAnimationType.Fade)
                 height += Step();
