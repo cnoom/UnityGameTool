@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -17,6 +18,11 @@ namespace CNoom.UnityGameTool.TextAnimation
 
         private TextAnimationEngine _engine;
         private TMP_Text _textComponent;
+
+        // 原始网格数据缓存，每帧先恢复再应用动画，避免修改累积
+        private bool _meshCached;
+        private Vector3[][] _cachedVertices;
+        private Color32[][] _cachedColors;
 
         /// <inheritdoc />
         public bool IsPlaying => _engine != null && _engine.IsPlaying;
@@ -44,6 +50,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             }
 
             _engine.Begin(visibleCharacterCount);
+            CacheOriginalMesh();
             enabled = true;
         }
 
@@ -92,6 +99,7 @@ namespace CNoom.UnityGameTool.TextAnimation
             if (_engine.IsPlaying && visibleCharacterCount > 0)
             {
                 _engine.Begin(visibleCharacterCount);
+                CacheOriginalMesh();
             }
         }
 
@@ -100,6 +108,9 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// </summary>
         private void ApplyToMesh()
         {
+            // 先恢复原始网格数据，避免帧间修改累积
+            RestoreOriginalMesh();
+
             var textInfo = _textComponent.textInfo;
             if (textInfo == null) return;
 
@@ -166,12 +177,66 @@ namespace CNoom.UnityGameTool.TextAnimation
         }
 
         /// <summary>
-        /// 恢复 TMP 网格到原始状态。
+        /// 恢复 TMP 网格到原始状态（动画结束时调用）。
         /// </summary>
         private void RestoreMesh()
         {
-            // 强制刷新网格，让 TMP 重新生成干净顶点
+            _meshCached = false;
             _textComponent.ForceMeshUpdate(true);
+        }
+
+        /// <summary>
+        /// 缓存 TMP 原始网格数据（动画开始时调用一次）。
+        /// </summary>
+        private void CacheOriginalMesh()
+        {
+            var textInfo = _textComponent.textInfo;
+            if (textInfo == null) return;
+
+            int meshCount = textInfo.meshInfo.Length;
+            if (_cachedVertices == null || _cachedVertices.Length != meshCount)
+            {
+                _cachedVertices = new Vector3[meshCount][];
+                _cachedColors = new Color32[meshCount][];
+            }
+
+            for (int i = 0; i < meshCount; i++)
+            {
+                var mesh = textInfo.meshInfo[i];
+                int vertLen = mesh.vertices.Length;
+                int colorLen = mesh.colors32.Length;
+
+                if (_cachedVertices[i] == null || _cachedVertices[i].Length != vertLen)
+                    _cachedVertices[i] = new Vector3[vertLen];
+                if (_cachedColors[i] == null || _cachedColors[i].Length != colorLen)
+                    _cachedColors[i] = new Color32[colorLen];
+
+                Array.Copy(mesh.vertices, _cachedVertices[i], vertLen);
+                Array.Copy(mesh.colors32, _cachedColors[i], colorLen);
+            }
+
+            _meshCached = true;
+        }
+
+        /// <summary>
+        /// 从缓存恢复原始网格数据（每帧调用，避免修改累积）。
+        /// </summary>
+        private void RestoreOriginalMesh()
+        {
+            if (!_meshCached) return;
+
+            var textInfo = _textComponent.textInfo;
+            if (textInfo == null) return;
+
+            int meshCount = Math.Min(_cachedVertices.Length, textInfo.meshInfo.Length);
+            for (int i = 0; i < meshCount; i++)
+            {
+                var mesh = textInfo.meshInfo[i];
+                int vertLen = Math.Min(_cachedVertices[i].Length, mesh.vertices.Length);
+                int colorLen = Math.Min(_cachedColors[i].Length, mesh.colors32.Length);
+                Array.Copy(_cachedVertices[i], mesh.vertices, vertLen);
+                Array.Copy(_cachedColors[i], mesh.colors32, colorLen);
+            }
         }
 
         private void OnDestroy()
