@@ -54,8 +54,8 @@ namespace CNoom.UnityGameTool.Tests
                 maxAlpha: 1f);
             _engine.Begin(config);
 
-            // 在周期 1/4 处应返回最大 Alpha
-            var data = _engine.Tick(0.25f);
+            // 在周期中点（phase=0.5）应返回最大 Alpha
+            var data = _engine.Tick(0.5f);
             Assert.AreEqual(1f, data.Alpha, 0.01f);
         }
 
@@ -69,8 +69,8 @@ namespace CNoom.UnityGameTool.Tests
                 floatAmplitude: 10f);
             _engine.Begin(config);
 
-            var data = _engine.Tick(0.25f);
-            // 在周期 1/4 处，pingpong 应达到最大
+            // phase=0.125 → pingpong=0.25 → normalizedOffset=-0.5 → offset=-5
+            var data = _engine.Tick(0.125f);
             Assert.AreNotEqual(0f, data.YOffset, "浮动类型应产生非零偏移");
         }
 
