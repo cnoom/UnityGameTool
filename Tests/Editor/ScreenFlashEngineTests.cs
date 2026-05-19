@@ -128,13 +128,7 @@ namespace CNoom.UnityGameTool.Tests
         [Test]
         public void Tick_PulseMode_Repeats()
         {
-            var config = new ScreenFlashConfig
-            {
-                Mode = ScreenFlashMode.Pulse,
-                PulseCount = 2,
-                PulseInterval = 0.1f
-            };
-            config = CreatePulseConfig(2, 0.1f);
+            var config = CreatePulseConfig(2, 0.1f);
 
             _engine.AddFlash(config);
 
