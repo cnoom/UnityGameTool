@@ -109,17 +109,16 @@ namespace CNoom.UnityGameTool.Tests
         {
             _engine.Add("-42", 100f, 200f);
 
-            // 推进超过总时长
+            // 推进超过总时长，捕获完成帧的 ID
             float total = _config.TotalDuration;
+            var completed = new List<int>();
             for (int i = 0; i < 100; i++)
             {
                 _engine.Tick(0.016f);
+                _engine.GetCompletedIds(completed);
             }
 
             Assert.IsFalse(_engine.IsActive(1), "超过总时长后应标记为完成");
-
-            var completed = new List<int>();
-            _engine.GetCompletedIds(completed);
             Assert.Contains(1, completed);
         }
 
