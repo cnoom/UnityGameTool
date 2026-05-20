@@ -75,6 +75,9 @@ namespace CNoom.UnityGameTool.Tests
             _typewriterText = AddLabel(twSection, "TypewriterText",
                 new Vector2(0.05f, 0f), new Vector2(0.95f, 1f), 28,
                 TextAlignmentOptions.Center, Color.white, "");
+            // TypewriterCoroutine 和 TextAnimationDriver 都有 RequireComponent(typeof(TMP_Text))
+            // 必须先添加 TextMeshProUGUI，否则 Unity 尝试添加抽象类 TMP_Text 会报错
+            twSection.AddComponent<TextMeshProUGUI>();
             _typewriter = twSection.AddComponent<TypewriterCoroutine>();
             _textAnimation = twSection.AddComponent<TextAnimationDriver>();
 
@@ -144,7 +147,10 @@ namespace CNoom.UnityGameTool.Tests
                 TextAlignmentOptions.TopLeft, Color.white, "");
 
             // 对话系统自带打字机
+            // 注意：DialogueSequencerDriver 有 RequireComponent(typeof(TMP_Text))，
+            // TMP_Text 是抽象类不能 AddComponent，必须先添加 TextMeshProUGUI
             var dlgTw = dlgSection.AddComponent<TypewriterCoroutine>();
+            dlgSection.AddComponent<TextMeshProUGUI>();
             _dialogue = dlgSection.AddComponent<DialogueSequencerDriver>();
             _dialogue.OnDialogueComplete += () =>
             {
