@@ -223,7 +223,7 @@ namespace CNoom.UnityGameTool.Tests
             vlg.padding = new RectOffset(12, 12, 6, 6);
             vlg.childAlignment = TextAnchor.LowerCenter;
             vlg.childControlWidth = true;
-            vlg.childControlHeight = false;
+            vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
@@ -245,10 +245,15 @@ namespace CNoom.UnityGameTool.Tests
                 var hlg = rowObj.AddComponent<HorizontalLayoutGroup>();
                 hlg.spacing = 6;
                 hlg.childControlWidth = true;
-                hlg.childControlHeight = false;
+                hlg.childControlHeight = true;
                 hlg.childForceExpandWidth = true;
                 hlg.childForceExpandHeight = false;
                 hlg.childAlignment = TextAnchor.MiddleCenter;
+
+                // Row 需要最小高度，否则 VerticalLayoutGroup 给它 0 高度
+                var rowLayout = rowObj.AddComponent<LayoutElement>();
+                rowLayout.minHeight = 36;
+                rowLayout.preferredHeight = 36;
 
                 CreateButton(rowObj.transform, buttons[i].label, buttons[i].callback);
                 if (i + 1 < buttons.Length)
@@ -308,6 +313,10 @@ namespace CNoom.UnityGameTool.Tests
 
             var btnRect = btnObj.AddComponent<RectTransform>();
             btnRect.sizeDelta = new Vector2(0, 34);
+
+            var btnLayout = btnObj.AddComponent<LayoutElement>();
+            btnLayout.minHeight = 34;
+            btnLayout.preferredHeight = 34;
 
             var image = btnObj.AddComponent<Image>();
             image.color = new Color(0.18f, 0.28f, 0.48f, 0.92f);
