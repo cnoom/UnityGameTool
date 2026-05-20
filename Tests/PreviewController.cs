@@ -82,6 +82,16 @@ namespace CNoom.UnityGameTool.Tests
             _typewriterText = twTmp;
             _typewriter = twSection.AddComponent<TypewriterCoroutine>();
             _textAnimation = twSection.AddComponent<TextAnimationDriver>();
+            // 使用 Once 模式：每个字符出现时做一次弹跳动画后归位
+            _textAnimation.SetConfig(new TextAnimationConfig(
+                TextAnimationType.Bounce,
+                TextAnimationPlayMode.Once,
+                duration: 0.35f,
+                speed: 1f,
+                amplitude: 18f,
+                frequency: 2f,
+                charDelay: 0.03f
+            ));
 
             // --- 脉冲效果 ---
             var pulseSection = CreateSection("PulseSection");

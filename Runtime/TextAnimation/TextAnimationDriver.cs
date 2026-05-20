@@ -37,6 +37,23 @@ namespace CNoom.UnityGameTool.TextAnimation
             enabled = false;
         }
 
+        /// <summary>
+        /// 运行时替换动画配置。会重建引擎实例，正在播放的动画将被终止。
+        /// </summary>
+        /// <param name="config">新的动画配置，不可为 null</param>
+        public void SetConfig(TextAnimationConfig config)
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (_engine != null && _engine.IsPlaying)
+            {
+                _engine.Stop();
+                RestoreMesh();
+                enabled = false;
+            }
+            _config = config;
+            _engine = new TextAnimationEngine(_config);
+        }
+
         /// <inheritdoc />
         public void Play(int visibleCharacterCount)
         {
