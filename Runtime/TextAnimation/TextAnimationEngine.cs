@@ -80,6 +80,45 @@ namespace CNoom.UnityGameTool.TextAnimation
         }
 
         /// <summary>
+        /// 更新可见字符数量，不重置动画时间轴。
+        /// 仅扩展新增字符的数据，保持已有字符的动画连续性。
+        /// </summary>
+        /// <param name="charCount">新的可见字符总数</param>
+        public void UpdateCharCount(int charCount)
+        {
+            if (charCount <= 0) return;
+
+            int oldCount = _charCount;
+            _charCount = charCount;
+            EnsureCapacity(charCount);
+
+            // 仅初始化新增字符，保留已有字符的动画状态
+            for (int i = oldCount; i < charCount; i++)
+            {
+                _charData[i] = new CharAnimationData
+                {
+                    XOffset = 0f, YOffset = 0f, Scale = 1f, Alpha = 1f
+                };
+            }
+
+            // Shake 模式需要为新增字符生成种子
+            if (_config.Type == TextAnimationType.Shake)
+            {
+                for (int i = oldCount; i < charCount; i++)
+                {
+                    _shakeSeedX[i] = i * ShakeFactorX + ShakeOffsetX;
+                    _shakeSeedY[i] = i * ShakeFactorY + ShakeOffsetY;
+                }
+            }
+
+            // 确保处于播放状态
+            if (!_isPlaying && !_isFadingOut)
+            {
+                _isPlaying = true;
+            }
+        }
+
+        /// <summary>
         /// 获取指定字符的动画数据。
         /// </summary>
         /// <param name="index">字符索引</param>
