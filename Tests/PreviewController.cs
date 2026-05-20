@@ -71,13 +71,15 @@ namespace CNoom.UnityGameTool.Tests
         private void CreateModuleObjects()
         {
             // --- 打字机 + 文字动画 ---
+            // 直接在 section 上创建 TMP 作为可见文本（TypewriterCoroutine/TextAnimationDriver
+            // 通过 RequireComponent 需要同 GameObject 上的 TMP_Text）
             var twSection = CreateSection("TypewriterSection");
-            _typewriterText = AddLabel(twSection, "TypewriterText",
-                new Vector2(0.05f, 0f), new Vector2(0.95f, 1f), 28,
-                TextAlignmentOptions.Center, Color.white, "");
-            // TypewriterCoroutine 和 TextAnimationDriver 都有 RequireComponent(typeof(TMP_Text))
-            // 必须先添加 TextMeshProUGUI，否则 Unity 尝试添加抽象类 TMP_Text 会报错
-            twSection.AddComponent<TextMeshProUGUI>();
+            var twTmp = twSection.AddComponent<TextMeshProUGUI>();
+            twTmp.fontSize = 28;
+            twTmp.alignment = TextAlignmentOptions.Center;
+            twTmp.color = Color.white;
+            twTmp.margin = new Vector4(20, 0, 20, 0);
+            _typewriterText = twTmp;
             _typewriter = twSection.AddComponent<TypewriterCoroutine>();
             _textAnimation = twSection.AddComponent<TextAnimationDriver>();
 
