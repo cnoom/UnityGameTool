@@ -33,5 +33,12 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// 跳过动画，恢复原始状态。
         /// </summary>
         void Skip();
+
+        /// <summary>
+        /// 当文本内容变化时由外部调用，更新可见字符数。
+        /// 用于打字机逐字显示时同步更新动画范围。
+        /// </summary>
+        /// <param name="visibleCharacterCount">当前可见字符总数</param>
+        void UpdateVisibleCount(int visibleCharacterCount);
     }
 }
