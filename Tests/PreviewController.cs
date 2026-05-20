@@ -87,7 +87,7 @@ namespace CNoom.UnityGameTool.Tests
                 new Vector2(0.35f, 0.1f), new Vector2(0.65f, 0.9f));
             var pulseImg = _pulseVisual.AddComponent<Image>();
             pulseImg.color = new Color(0.2f, 0.8f, 0.4f, 1f);
-            _pulseVisual.AddComponent<CanvasRenderer>();
+            // Image 会自动添加 CanvasRenderer，无需手动添加
             _pulseVisual.AddComponent<CanvasGroup>();
             _pulse = _pulseVisual.AddComponent<PulseDriver>();
 
@@ -97,14 +97,13 @@ namespace CNoom.UnityGameTool.Tests
                 new Vector2(0.1f, 0.35f), new Vector2(0.9f, 0.65f));
             var bgImg = pbBg.AddComponent<Image>();
             bgImg.color = new Color(0.15f, 0.15f, 0.15f, 0.9f);
-            pbBg.AddComponent<CanvasRenderer>();
+            // Image 会自动添加 CanvasRenderer，无需手动添加
             _progressBar = pbBg.AddComponent<ProgressBarDriver>();
 
             var pbFill = CreateUIObject("Fill", pbBg.transform,
                 Vector2.zero, new Vector2(1f, 1f));
             _progressFillImage = pbFill.AddComponent<Image>();
             _progressFillImage.color = new Color(0.2f, 0.7f, 1f, 1f);
-            pbFill.AddComponent<CanvasRenderer>();
             _progressBar.OnValueChanged += v =>
             {
                 _progressFillImage.rectTransform.anchorMax =
@@ -133,6 +132,7 @@ namespace CNoom.UnityGameTool.Tests
             // --- 屏幕闪烁（覆盖全屏） ---
             var sfObj = CreateUIObject("ScreenFlashHost", transform,
                 Vector2.zero, Vector2.one);
+            // ScreenFlashDriver 需要 CanvasRenderer，但没有 Graphic 子类自动添加
             sfObj.AddComponent<CanvasRenderer>();
             _screenFlash = sfObj.AddComponent<ScreenFlashDriver>();
 
@@ -147,11 +147,12 @@ namespace CNoom.UnityGameTool.Tests
                 TextAlignmentOptions.TopLeft, Color.white, "");
 
             // 对话系统自带打字机
-            // 注意：DialogueSequencerDriver 有 RequireComponent(typeof(TMP_Text))，
-            // TMP_Text 是抽象类不能 AddComponent，必须先添加 TextMeshProUGUI
-            var dlgTw = dlgSection.AddComponent<TypewriterCoroutine>();
-            dlgSection.AddComponent<TextMeshProUGUI>();
-            _dialogue = dlgSection.AddComponent<DialogueSequencerDriver>();
+            // 注意：DialogueSection 上已有 Image（背景），不能再加 TextMeshProUGUI（Graphic 冲突）
+            // 把打字机和对话组件放到独立子物体上
+            var dlgDriverHost = CreateUIObject("DialogueDriver", dlgSection.transform);
+            dlgDriverHost.AddComponent<TextMeshProUGUI>();
+            var dlgTw = dlgDriverHost.AddComponent<TypewriterCoroutine>();
+            _dialogue = dlgDriverHost.AddComponent<DialogueSequencerDriver>();
             _dialogue.OnDialogueComplete += () =>
             {
                 _statusText.text = "对话结束";
