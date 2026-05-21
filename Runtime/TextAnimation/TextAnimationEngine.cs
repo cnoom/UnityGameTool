@@ -53,6 +53,9 @@ namespace CNoom.UnityGameTool.TextAnimation
         // 每字符动画数据（预分配，避免 GC）
         private CharAnimationData[] _charData = Array.Empty<CharAnimationData>();
 
+        // 每字符实际揭示时间戳（打字机集成时由 UpdateCharCount 记录）
+        private float[] _charRevealTime = Array.Empty<float>();
+
         // Shake 模式的每轴随机种子（固定种子保证帧间一致性）
         private float[] _shakeSeedX = Array.Empty<float>();
         private float[] _shakeSeedY = Array.Empty<float>();
@@ -93,8 +96,10 @@ namespace CNoom.UnityGameTool.TextAnimation
             EnsureCapacity(charCount);
 
             // 仅初始化新增字符，保留已有字符的动画状态
+            // 记录实际揭示时间（当前 elapsed），而非用 charDelay 估算
             for (int i = oldCount; i < charCount; i++)
             {
+                _charRevealTime[i] = _elapsed;
                 _charData[i] = new CharAnimationData
                 {
                     XOffset = 0f, YOffset = 0f, Scale = 1f, Alpha = 1f
@@ -146,9 +151,10 @@ namespace CNoom.UnityGameTool.TextAnimation
 
             EnsureCapacity(charCount);
 
-            // 初始化每字符数据
+            // 初始化每字符数据和揭示时间
             for (int i = 0; i < charCount; i++)
             {
+                _charRevealTime[i] = i * _config.CharDelay;
                 _charData[i] = new CharAnimationData
                 {
                     XOffset = 0f,
@@ -238,7 +244,7 @@ namespace CNoom.UnityGameTool.TextAnimation
 
             for (int i = 0; i < _charCount; i++)
             {
-                float charStart = i * _config.CharDelay;
+                float charStart = _charRevealTime[i];
                 float charTime = _elapsed - charStart;
 
                 if (charTime < 0f)
@@ -417,6 +423,7 @@ namespace CNoom.UnityGameTool.TextAnimation
                 _charData = new CharAnimationData[count];
                 _shakeSeedX = new float[count];
                 _shakeSeedY = new float[count];
+                _charRevealTime = new float[count];
             }
         }
 
@@ -435,11 +442,11 @@ namespace CNoom.UnityGameTool.TextAnimation
         }
 
         /// <summary>
-        /// 获取指定字符的局部时间（扣除字符间延迟）。
+        /// 获取指定字符的局部时间（扣除揭示时间）。
         /// </summary>
         private float GetCharTime(int index)
         {
-            return Math.Max(0f, _elapsed - index * _config.CharDelay);
+            return Math.Max(0f, _elapsed - _charRevealTime[index]);
         }
 
         /// <summary>
