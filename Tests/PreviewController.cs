@@ -8,6 +8,7 @@ using CNoom.UnityGameTool.ScreenFlash;
 using CNoom.UnityGameTool.TextAnimation;
 using CNoom.UnityGameTool.Timer;
 using CNoom.UnityGameTool.Typewriter;
+// TypewriterAnimator 已替代 TypewriterCoroutine + TextAnimationDriver 的组合
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -22,8 +23,7 @@ namespace CNoom.UnityGameTool.Tests
     [RequireComponent(typeof(Canvas))]
     public class PreviewController : MonoBehaviour
     {
-        private TypewriterCoroutine _typewriter;
-        private TextAnimationDriver _textAnimation;
+        private TypewriterAnimator _typewriter;
         private ScreenFlashDriver _screenFlash;
         private PulseDriver _pulse;
         private ProgressBarDriver _progressBar;
@@ -70,9 +70,7 @@ namespace CNoom.UnityGameTool.Tests
         /// </summary>
         private void CreateModuleObjects()
         {
-            // --- 打字机 + 文字动画 ---
-            // 直接在 section 上创建 TMP 作为可见文本（TypewriterCoroutine/TextAnimationDriver
-            // 通过 RequireComponent 需要同 GameObject 上的 TMP_Text）
+            // --- 打字动画（TypewriterAnimator 融合打字机 + 入场动画） ---
             var twSection = CreateSection("TypewriterSection");
             var twTmp = twSection.AddComponent<TextMeshProUGUI>();
             twTmp.fontSize = 28;
@@ -80,18 +78,7 @@ namespace CNoom.UnityGameTool.Tests
             twTmp.color = Color.white;
             twTmp.margin = new Vector4(20, 0, 20, 0);
             _typewriterText = twTmp;
-            _typewriter = twSection.AddComponent<TypewriterCoroutine>();
-            _textAnimation = twSection.AddComponent<TextAnimationDriver>();
-            // 使用 Once 模式：每个字符出现时做一次弹跳动画后归位
-            _textAnimation.SetConfig(new TextAnimationConfig(
-                TextAnimationType.Bounce,
-                TextAnimationPlayMode.Once,
-                duration: 0.35f,
-                speed: 1f,
-                amplitude: 18f,
-                frequency: 2f,
-                charDelay: 0.03f
-            ));
+            _typewriter = twSection.AddComponent<TypewriterAnimator>();
 
             // --- 脉冲效果 ---
             var pulseSection = CreateSection("PulseSection");
