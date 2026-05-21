@@ -62,6 +62,25 @@ namespace CNoom.UnityGameTool.Typewriter
         }
 
         /// <summary>
+        /// 创建自定义配置。
+        /// </summary>
+        public TypewriterConfig(
+            float charactersPerSecond = 30f,
+            bool enablePunctuationDelay = true,
+            float punctuationDelayMultiplier = 5f,
+            string punctuationCharacters = "。，！？!?,.;：；…—~",
+            float newLineDelayMultiplier = 3f,
+            bool skipSpaceDelay = true)
+        {
+            _charactersPerSecond = charactersPerSecond;
+            _enablePunctuationDelay = enablePunctuationDelay;
+            _punctuationDelayMultiplier = punctuationDelayMultiplier;
+            _punctuationCharacters = punctuationCharacters;
+            _newLineDelayMultiplier = newLineDelayMultiplier;
+            _skipSpaceDelay = skipSpaceDelay;
+        }
+
+        /// <summary>
         /// 获取指定字符的显示延迟时间（秒）。
         /// </summary>
         /// <param name="c">目标字符</param>

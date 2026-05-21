@@ -1,40 +1,24 @@
 using System;
 using System.Collections;
-using CNoom.UnityGameTool.TextAnimation;
 using TMPro;
 using UnityEngine;
 
 namespace CNoom.UnityGameTool.Typewriter
 {
     /// <summary>
-    /// 打字动画组件。将打字机逐字显示与文字入场动画融为一体，
-    /// 无需额外挂载 TextAnimationDriver。
-    /// 内部同时持有 TypewriterEngine（节奏）和 TextAnimationEngine（动画），
-    /// 共享同一份时间轴，彻底解决同步问题。
+    /// 打字动画驱动组件。将打字机逐字显示与文字入场动画融为一体。
+    /// 薄封装层：持有 TypewriterAnimatorEngine，通过协程驱动逐字揭示，
+    /// 通过 Update 驱动每帧顶点动画。
     /// </summary>
     [RequireComponent(typeof(TMP_Text))]
     public class TypewriterAnimator : MonoBehaviour, ITypewriter
     {
-        [Header("打字机配置")]
-        [Tooltip("打字机效果配置，控制逐字显示速度、标点延迟等")]
+        [Header("打字动画配置")]
+        [Tooltip("打字动画效果配置，合并了打字速度和入场动画参数")]
         [SerializeField]
-        private TypewriterConfig _typewriterConfig = new TypewriterConfig();
+        private TypewriterAnimatorConfig _config = new TypewriterAnimatorConfig();
 
-        [Header("文字动画配置")]
-        [Tooltip("逐字入场动画配置，控制每个字符的入场效果")]
-        [SerializeField]
-        private TextAnimationConfig _animationConfig = new TextAnimationConfig(
-            TextAnimationType.Bounce,
-            TextAnimationPlayMode.Once,
-            duration: 0.35f,
-            speed: 1f,
-            amplitude: 18f,
-            frequency: 2f,
-            charDelay: 0.03f
-        );
-
-        private TypewriterEngine _typewriterEngine;
-        private TextAnimationEngine _animationEngine;
+        private TypewriterAnimatorEngine _engine;
         private TMP_Text _textComponent;
         private Coroutine _playCoroutine;
 
@@ -44,9 +28,7 @@ namespace CNoom.UnityGameTool.Typewriter
         private Color32[][] _cachedColors;
 
         /// <inheritdoc />
-        public bool IsPlaying =>
-            (_typewriterEngine != null && _typewriterEngine.IsPlaying) ||
-            (_animationEngine != null && _animationEngine.IsPlaying);
+        public bool IsPlaying => _engine != null && _engine.IsPlaying;
 
         /// <inheritdoc />
         public event TypewriterCompleteHandler OnComplete;
@@ -57,8 +39,8 @@ namespace CNoom.UnityGameTool.Typewriter
         private void Awake()
         {
             _textComponent = GetComponent<TMP_Text>();
-            _typewriterEngine = new TypewriterEngine(_typewriterConfig);
-            _animationEngine = new TextAnimationEngine(_animationConfig);
+            _engine = new TypewriterAnimatorEngine(_config);
+            enabled = false;
         }
 
         /// <inheritdoc />
@@ -72,46 +54,42 @@ namespace CNoom.UnityGameTool.Typewriter
         public void Stop()
         {
             StopDriver();
-            _typewriterEngine?.Stop();
-            _animationEngine?.Stop();
+            _engine?.Stop();
+            enabled = false;
         }
 
         /// <inheritdoc />
         public void Skip()
         {
-            if (_typewriterEngine == null || !_typewriterEngine.IsPlaying) return;
+            if (_engine == null || !_engine.IsPlaying) return;
 
             StopDriver();
-            _typewriterEngine.SkipToEnd();
-            _animationEngine.SkipToEnd();
-            _textComponent.maxVisibleCharacters = _typewriterEngine.TotalCharacters;
+            _engine.SkipToEnd();
+            _textComponent.maxVisibleCharacters = _engine.TotalCharacters;
+            enabled = false;
             RestoreMesh();
 
             OnComplete?.Invoke();
         }
 
         /// <summary>
-        /// 运行时替换打字机配置。
+        /// 运行时替换配置。会重建引擎实例，正在播放的动画将被终止。
         /// </summary>
-        public void SetTypewriterConfig(TypewriterConfig config)
+        public void SetConfig(TypewriterAnimatorConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
-            _typewriterConfig = config;
-            _typewriterEngine = new TypewriterEngine(_typewriterConfig);
-        }
-
-        /// <summary>
-        /// 运行时替换动画配置。
-        /// </summary>
-        public void SetAnimationConfig(TextAnimationConfig config)
-        {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-            _animationConfig = config;
-            _animationEngine = new TextAnimationEngine(_animationConfig);
+            if (_engine != null && _engine.IsPlaying)
+            {
+                _engine.Stop();
+                RestoreMesh();
+                enabled = false;
+            }
+            _config = config;
+            _engine = new TypewriterAnimatorEngine(_config);
         }
 
         // ============================================================
-        // 核心协程：逐字显示 + 入场动画
+        // 核心协程：逐字揭示
         // ============================================================
 
         private IEnumerator PlayRoutine(string text)
@@ -120,7 +98,7 @@ namespace CNoom.UnityGameTool.Typewriter
             _textComponent.ForceMeshUpdate(true);
 
             int total = _textComponent.textInfo.characterCount;
-            _typewriterEngine.Begin(total);
+            _engine.Begin(total);
             _textComponent.maxVisibleCharacters = 0;
 
             if (total == 0)
@@ -130,14 +108,13 @@ namespace CNoom.UnityGameTool.Typewriter
                 yield break;
             }
 
-            // 启动动画引擎（仅第一个字符），并缓存原始网格
-            _animationEngine.Begin(1);
+            // 缓存原始网格，启动帧动画
             CacheOriginalMesh();
             enabled = true;
 
-            while (_typewriterEngine.IsPlaying)
+            while (_engine.IsTyping)
             {
-                int index = _typewriterEngine.CurrentIndex;
+                int index = _engine.CurrentIndex;
 
                 // 边界检查：防止 TMP 富文本解析导致 characterCount 变化
                 if (index >= _textComponent.textInfo.characterCount)
@@ -146,12 +123,10 @@ namespace CNoom.UnityGameTool.Typewriter
                 }
 
                 char c = _textComponent.textInfo.characterInfo[index].character;
-                var (hasMore, delay) = _typewriterEngine.Advance(c);
+                var (hasMore, delay) = _engine.Advance(c);
 
-                _textComponent.maxVisibleCharacters = _typewriterEngine.CurrentIndex;
-
-                // 同步扩展动画引擎的字符数（不重置时间轴）
-                _animationEngine.UpdateCharCount(_typewriterEngine.CurrentIndex);
+                _textComponent.maxVisibleCharacters = _engine.CurrentIndex;
+                _engine.UpdateCharCount(_engine.CurrentIndex);
 
                 OnCharacterTyped?.Invoke(index, c);
 
@@ -172,31 +147,26 @@ namespace CNoom.UnityGameTool.Typewriter
                 }
             }
 
-            // 打字完成，等待所有字符的入场动画播完
-            yield return null;
-
-            // 动画引擎继续在 Update 中运行直到所有字符归位
-            // 当动画结束时 Update 会自动禁用组件并触发 OnComplete
+            // 打字完成，动画引擎在 Update 中继续运行直到所有字符归位
             _playCoroutine = null;
         }
 
         // ============================================================
-        // 帧更新：应用文字动画到 TMP 网格顶点
+        // 帧更新：驱动 Engine.Tick + 应用到 TMP 网格顶点
         // ============================================================
 
         private void Update()
         {
-            if (_animationEngine == null)
+            if (_engine == null)
             {
                 enabled = false;
                 return;
             }
 
-            bool stillAnimating = _animationEngine.Tick(Time.deltaTime);
+            bool stillAnimating = _engine.Tick(Time.deltaTime);
             ApplyAnimationToMesh();
 
-            // 打字已完成且动画也播完
-            if (!stillAnimating && (_typewriterEngine == null || !_typewriterEngine.IsPlaying))
+            if (!stillAnimating && !_engine.IsTyping)
             {
                 enabled = false;
                 RestoreMesh();
@@ -209,7 +179,7 @@ namespace CNoom.UnityGameTool.Typewriter
         // ============================================================
 
         /// <summary>
-        /// 将动画引擎计算结果应用到 TMP 网格顶点。
+        /// 将引擎计算结果应用到 TMP 网格顶点。
         /// </summary>
         private void ApplyAnimationToMesh()
         {
@@ -223,7 +193,7 @@ namespace CNoom.UnityGameTool.Typewriter
             {
                 if (!textInfo.characterInfo[i].isVisible) continue;
 
-                if (engineIndex < _animationEngine.CharCount)
+                if (engineIndex < _engine.CharCount)
                 {
                     ApplyCharAnimation(engineIndex, textInfo.characterInfo[i]);
                 }
@@ -241,7 +211,7 @@ namespace CNoom.UnityGameTool.Typewriter
         /// </summary>
         private void ApplyCharAnimation(int engineIndex, TMP_CharacterInfo charInfo)
         {
-            ref readonly var data = ref _animationEngine.GetCharData(engineIndex);
+            ref readonly var data = ref _engine.GetCharData(engineIndex);
             int materialIndex = charInfo.materialReferenceIndex;
             int vertexIndex = charInfo.vertexIndex;
 
@@ -343,7 +313,7 @@ namespace CNoom.UnityGameTool.Typewriter
         private void RestoreMesh()
         {
             _meshCached = false;
-            _animationEngine?.Reset();
+            _engine?.Reset();
             if (_textComponent != null)
             {
                 _textComponent.ForceMeshUpdate(true);

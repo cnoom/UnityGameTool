@@ -5,10 +5,8 @@ using CNoom.UnityGameTool.Dialogue;
 using CNoom.UnityGameTool.Pulse;
 using CNoom.UnityGameTool.ProgressBar;
 using CNoom.UnityGameTool.ScreenFlash;
-using CNoom.UnityGameTool.TextAnimation;
 using CNoom.UnityGameTool.Timer;
 using CNoom.UnityGameTool.Typewriter;
-// TypewriterAnimator 已替代 TypewriterCoroutine + TextAnimationDriver 的组合
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
