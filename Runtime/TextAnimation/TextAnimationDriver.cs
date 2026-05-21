@@ -110,6 +110,7 @@ namespace CNoom.UnityGameTool.TextAnimation
         /// <summary>
         /// 当文本内容变化时由外部调用，更新可见字符数。
         /// 不重置动画时间轴，保持已有字符的动画连续性。
+        /// 注意：不重新缓存网格，因为 Play() 的初始缓存已包含所有字符的顶点数据。
         /// </summary>
         /// <param name="visibleCharacterCount">当前可见字符总数</param>
         public void UpdateVisibleCount(int visibleCharacterCount)
@@ -117,7 +118,6 @@ namespace CNoom.UnityGameTool.TextAnimation
             if (_engine.IsPlaying && visibleCharacterCount > 0)
             {
                 _engine.UpdateCharCount(visibleCharacterCount);
-                CacheOriginalMesh();
             }
         }
 
