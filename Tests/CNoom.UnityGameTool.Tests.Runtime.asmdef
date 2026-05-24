@@ -3,9 +3,12 @@
     "rootNamespace": "CNoom.UnityGameTool.Tests",
     "references": [
         "CNoom.UnityGameTool.Runtime",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
